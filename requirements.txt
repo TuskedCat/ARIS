@@ -1,0 +1,6 @@
+flask
+flask-cors
+llama-cpp-python
+kokoro
+soundfile
+numpy
