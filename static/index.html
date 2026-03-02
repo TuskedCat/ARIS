@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ARIS — Autonomous Robotic Instruction System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@300;400;600;700&display=swap" rel="stylesheet" />
+
+<style>
+/* ── RESET & BASE ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:        #080a0c;
+  --bg2:       #0e1215;
+  --bg3:       #141a1f;
+  --border:    #1e2a33;
+  --amber:     #e8922a;
+  --amber-dim: #7a4b14;
+  --amber-glow:#f5b260;
+  --steel:     #3d8fbf;
+  --steel-dim: #1a3d52;
+  --green:     #2dbd6e;
+  --red:       #d94f4f;
+  --text:      #c8d8e0;
+  --text-dim:  #4a6270;
+  --text-mid:  #7a9aaa;
+  --mono:      'Share Tech Mono', monospace;
+  --sans:      'Rajdhani', sans-serif;
+}
+
+html, body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 15px;
+  overflow-x: hidden;
+}
+
+/* scanline overlay */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0px,
+    transparent 3px,
+    rgba(0,0,0,0.18) 3px,
+    rgba(0,0,0,0.18) 4px
+  );
+  pointer-events: none;
+  z-index: 1000;
+}
+
+/* ── LAYOUT ── */
+.shell {
+  display: grid;
+  grid-template-rows: 56px 1fr;
+  grid-template-columns: 260px 1fr 300px;
+  grid-template-areas:
+    "hdr hdr hdr"
+    "side main panel";
+  height: 100vh;
+  gap: 0;
+}
+
+/* ── HEADER ── */
+header {
+  grid-area: hdr;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 0 24px;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  position: relative;
+  overflow: hidden;
+}
+header::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--amber), transparent);
+}
+
+.logo {
+  font-family: var(--mono);
+  font-size: 20px;
+  color: var(--amber);
+  letter-spacing: 4px;
+  text-shadow: 0 0 12px rgba(232,146,42,0.6);
+}
+.logo span { color: var(--text-dim); font-size: 11px; display: block; letter-spacing: 2px; }
+
+.header-tags {
+  display: flex; gap: 8px; margin-left: auto;
+  font-family: var(--mono); font-size: 10px;
+}
+.tag {
+  padding: 3px 8px;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  letter-spacing: 1px;
+}
+
+.status-pill {
+  display: flex; align-items: center; gap: 7px;
+  font-family: var(--mono); font-size: 11px;
+  padding: 5px 12px;
+  border: 1px solid var(--border);
+  background: var(--bg3);
+}
+.status-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--text-dim);
+  transition: background .3s;
+}
+.status-dot.online  { background: var(--green);  box-shadow: 0 0 6px var(--green); }
+.status-dot.offline { background: var(--red);    box-shadow: 0 0 6px var(--red); }
+#status-label { color: var(--text-mid); letter-spacing: 1px; }
+
+/* ── SIDEBAR ── */
+.sidebar {
+  grid-area: side;
+  border-right: 1px solid var(--border);
+  background: var(--bg2);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+
+.sidebar-section {
+  padding: 16px;
+  border-bottom: 1px solid var(--border);
+}
+.section-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--amber-dim);
+  letter-spacing: 2px;
+  margin-bottom: 12px;
+}
+
+/* Quick prompts */
+.quick-prompts {
+  display: flex; flex-direction: column; gap: 6px;
+}
+.qp-chip {
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  background: var(--bg3);
+  color: var(--text-mid);
+  font-family: var(--mono);
+  font-size: 11px;
+  cursor: pointer;
+  transition: border-color .15s, color .15s, background .15s;
+  text-align: left;
+  line-height: 1.4;
+  position: relative;
+  overflow: hidden;
+}
+.qp-chip::before {
+  content: '▶';
+  color: var(--amber-dim);
+  margin-right: 6px;
+  font-size: 9px;
+  transition: color .15s;
+}
+.qp-chip:hover {
+  border-color: var(--amber-dim);
+  color: var(--amber-glow);
+  background: rgba(232,146,42,0.06);
+}
+.qp-chip:hover::before { color: var(--amber); }
+
+/* History list */
+.history-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0;
+}
+.history-list::-webkit-scrollbar { width: 3px; }
+.history-list::-webkit-scrollbar-track { background: transparent; }
+.history-list::-webkit-scrollbar-thumb { background: var(--border); }
+
+.history-item {
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: background .15s;
+}
+.history-item:hover { background: rgba(232,146,42,0.04); }
+.history-item .hi-time {
+  font-family: var(--mono); font-size: 10px;
+  color: var(--text-dim); margin-bottom: 3px;
+}
+.history-item .hi-text {
+  font-size: 12px; color: var(--text-mid);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.history-empty {
+  padding: 16px; font-family: var(--mono);
+  font-size: 11px; color: var(--text-dim); text-align: center;
+}
+
+/* ── MAIN AREA ── */
+main {
+  grid-area: main;
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+
+/* Command bar */
+.command-bar {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg2);
+}
+.cb-inner {
+  display: flex; gap: 10px; align-items: flex-end;
+}
+.cb-label {
+  font-family: var(--mono); font-size: 10px;
+  color: var(--amber-dim); letter-spacing: 2px;
+  margin-bottom: 6px;
+}
+.cb-input-wrap {
+  flex: 1;
+  position: relative;
+}
+.cb-input-wrap::before {
+  content: '>';
+  position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+  font-family: var(--mono); color: var(--amber);
+  font-size: 16px; pointer-events: none;
+  text-shadow: 0 0 8px rgba(232,146,42,0.8);
+}
+#cmd-input {
+  width: 100%; padding: 12px 14px 12px 32px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  color: var(--amber-glow);
+  font-family: var(--mono); font-size: 14px;
+  outline: none;
+  transition: border-color .2s, box-shadow .2s;
+  caret-color: var(--amber);
+}
+#cmd-input:focus {
+  border-color: var(--amber-dim);
+  box-shadow: 0 0 0 2px rgba(232,146,42,0.12), inset 0 0 20px rgba(232,146,42,0.03);
+}
+#cmd-input::placeholder { color: var(--text-dim); }
+
+#send-btn {
+  padding: 12px 22px;
+  background: var(--amber);
+  border: none; cursor: pointer;
+  font-family: var(--mono); font-size: 12px;
+  color: #060a0c; letter-spacing: 2px; font-weight: bold;
+  transition: background .15s, box-shadow .15s;
+  white-space: nowrap;
+  height: 46px;
+}
+#send-btn:hover:not(:disabled) {
+  background: var(--amber-glow);
+  box-shadow: 0 0 16px rgba(232,146,42,0.4);
+}
+#send-btn:disabled { background: var(--amber-dim); cursor: not-allowed; opacity: .6; }
+
+/* Response area */
+.response-area {
+  flex: 1; overflow-y: auto; padding: 20px;
+  display: flex; flex-direction: column; gap: 16px;
+}
+.response-area::-webkit-scrollbar { width: 4px; }
+.response-area::-webkit-scrollbar-track { background: transparent; }
+.response-area::-webkit-scrollbar-thumb { background: var(--border); }
+
+/* ARIS speech bubble */
+.aris-speech {
+  display: flex; gap: 14px; align-items: flex-start;
+  animation: fadeSlideUp .35s ease;
+}
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.aris-avatar {
+  width: 38px; height: 38px; flex-shrink: 0;
+  border: 1px solid var(--amber-dim);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--mono); font-size: 10px;
+  color: var(--amber); letter-spacing: 1px;
+  position: relative;
+}
+.aris-avatar::before {
+  content: '';
+  position: absolute; inset: 2px;
+  border: 1px solid rgba(232,146,42,0.2);
+}
+.speech-content {
+  flex: 1;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  padding: 14px 16px;
+  font-size: 15px; line-height: 1.6;
+  color: var(--text);
+  position: relative;
+}
+.speech-content::before {
+  content: '';
+  position: absolute; left: -6px; top: 14px;
+  width: 5px; height: 5px;
+  border-left: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  background: var(--bg3);
+  transform: rotate(45deg);
+}
+.speech-time {
+  font-family: var(--mono); font-size: 10px;
+  color: var(--text-dim); margin-bottom: 6px;
+}
+
+/* Sequence Steps */
+.sequence-block {
+  animation: fadeSlideUp .35s ease .1s both;
+}
+.seq-label {
+  font-family: var(--mono); font-size: 10px;
+  color: var(--steel); letter-spacing: 2px; margin-bottom: 8px;
+}
+.seq-steps {
+  display: flex; flex-direction: column; gap: 4px;
+}
+.seq-step {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  background: var(--bg3);
+  font-family: var(--mono); font-size: 12px;
+  animation: stepIn .25s ease both;
+}
+@keyframes stepIn {
+  from { opacity: 0; transform: translateX(-8px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.seq-step:nth-child(1)  { animation-delay: .05s; }
+.seq-step:nth-child(2)  { animation-delay: .10s; }
+.seq-step:nth-child(3)  { animation-delay: .15s; }
+.seq-step:nth-child(4)  { animation-delay: .20s; }
+.seq-step:nth-child(5)  { animation-delay: .25s; }
+.seq-step:nth-child(6)  { animation-delay: .30s; }
+.seq-step:nth-child(7)  { animation-delay: .35s; }
+.seq-step:nth-child(8)  { animation-delay: .40s; }
+.seq-num {
+  width: 20px; height: 20px;
+  border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; color: var(--text-dim); flex-shrink: 0;
+}
+.seq-cmd {
+  padding: 2px 6px;
+  font-size: 11px; letter-spacing: 1px;
+  flex-shrink: 0;
+}
+.cmd-MOVE_XYZ    { color: var(--steel);  border: 1px solid var(--steel-dim); background: rgba(61,143,191,.08); }
+.cmd-ROTATE_WRIST{ color: #a77bdf;       border: 1px solid #4a2d6e;          background: rgba(167,123,223,.08); }
+.cmd-GRAB        { color: var(--amber);  border: 1px solid var(--amber-dim); background: rgba(232,146,42,.08); }
+.cmd-HOME        { color: var(--green);  border: 1px solid #1a5535;          background: rgba(45,189,110,.08); }
+.cmd-WAIT        { color: var(--text-mid); border: 1px solid var(--border);  background: transparent; }
+.seq-val { color: var(--text-dim); font-size: 11px; }
+
+/* Think box */
+.think-block {
+  border: 1px solid var(--border);
+  background: var(--bg3);
+  padding: 12px 14px;
+  font-family: var(--mono); font-size: 11px;
+  color: var(--text-dim); line-height: 1.6;
+  animation: fadeSlideUp .35s ease .05s both;
+}
+.think-label {
+  color: var(--amber-dim); font-size: 10px;
+  letter-spacing: 2px; margin-bottom: 6px;
+}
+
+/* Loading */
+.loading-block {
+  display: flex; align-items: center; gap: 12px;
+  padding: 16px; font-family: var(--mono);
+  font-size: 12px; color: var(--amber-dim);
+}
+.spinner {
+  width: 20px; height: 20px;
+  border: 2px solid var(--border);
+  border-top-color: var(--amber);
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Empty state */
+.empty-state {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 12px; opacity: .4;
+}
+.empty-state svg { opacity: .3; }
+.empty-state p {
+  font-family: var(--mono); font-size: 12px;
+  color: var(--text-dim); letter-spacing: 2px;
+}
+
+/* ── RIGHT PANEL ── */
+.panel {
+  grid-area: panel;
+  border-left: 1px solid var(--border);
+  background: var(--bg2);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+.panel-section {
+  border-bottom: 1px solid var(--border);
+  overflow: hidden;
+  display: flex; flex-direction: column;
+}
+.panel-header {
+  padding: 10px 14px;
+  font-family: var(--mono); font-size: 10px;
+  color: var(--amber-dim); letter-spacing: 2px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  cursor: pointer; user-select: none;
+  transition: background .15s;
+}
+.panel-header:hover { background: rgba(232,146,42,0.04); }
+.panel-body { padding: 12px 14px; overflow: auto; }
+.panel-body::-webkit-scrollbar { width: 3px; }
+.panel-body::-webkit-scrollbar-thumb { background: var(--border); }
+
+/* Audio player */
+.audio-wrap {
+  display: flex; flex-direction: column; gap: 10px;
+}
+.audio-status {
+  font-family: var(--mono); font-size: 11px;
+  color: var(--text-dim); text-align: center;
+  padding: 8px;
+}
+audio {
+  width: 100%;
+  filter: invert(1) hue-rotate(180deg) brightness(.8);
+}
+.audio-text {
+  font-family: var(--mono); font-size: 11px;
+  color: var(--text-mid); line-height: 1.5;
+  border-left: 2px solid var(--amber-dim);
+  padding-left: 8px;
+  font-style: italic;
+}
+
+/* JSON viewer */
+.json-view {
+  font-family: var(--mono); font-size: 11px;
+  line-height: 1.6; white-space: pre-wrap;
+  color: var(--text-dim); flex: 1;
+}
+.json-key  { color: var(--steel); }
+.json-str  { color: #8ecf6e; }
+.json-num  { color: var(--amber); }
+.json-bool { color: #cc99ff; }
+
+/* Metrics */
+.metrics-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+}
+.metric {
+  background: var(--bg3); border: 1px solid var(--border);
+  padding: 8px 10px;
+}
+.metric .m-val {
+  font-family: var(--mono); font-size: 18px;
+  color: var(--amber); display: block;
+}
+.metric .m-lbl {
+  font-family: var(--mono); font-size: 10px;
+  color: var(--text-dim); letter-spacing: 1px;
+}
+
+/* Download links */
+.dl-links { display: flex; flex-direction: column; gap: 6px; }
+.dl-link {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  color: var(--text-mid); font-family: var(--mono); font-size: 11px;
+  text-decoration: none; transition: border-color .15s, color .15s;
+}
+.dl-link:hover { border-color: var(--amber-dim); color: var(--amber-glow); }
+.dl-link .dl-icon { font-size: 13px; }
+.dl-link.disabled { opacity: .3; pointer-events: none; }
+
+/* Collapsible */
+.collapse-arrow { transition: transform .2s; font-size: 10px; }
+.collapsed .collapse-arrow { transform: rotate(-90deg); }
+.collapsed .panel-body { display: none; }
+</style>
+</head>
+<body>
+
+<div class="shell">
+
+  <!-- HEADER -->
+  <header>
+    <div class="logo">
+      ARIS
+      <span>AUTONOMOUS ROBOTIC INSTRUCTION SYSTEM</span>
+    </div>
+    <div class="header-tags">
+      <div class="tag">6-DOF</div>
+      <div class="tag">QWEN-7B</div>
+      <div class="tag">KOKORO-TTS</div>
+    </div>
+    <div class="status-pill">
+      <div class="status-dot" id="status-dot"></div>
+      <span id="status-label">CHECKING...</span>
+    </div>
+  </header>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+
+    <!-- Quick Prompts -->
+    <div class="sidebar-section">
+      <div class="section-label">QUICK COMMANDS</div>
+      <div class="quick-prompts" id="quick-prompts">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+
+    <!-- History -->
+    <div class="section-label" style="padding: 12px 16px 6px; font-family: var(--mono); font-size: 10px; color: var(--amber-dim); letter-spacing: 2px;">MISSION HISTORY</div>
+    <div class="history-list" id="history-list">
+      <div class="history-empty" id="history-empty">NO MISSIONS YET</div>
+    </div>
+
+  </aside>
+
+  <!-- MAIN -->
+  <main>
+    <div class="command-bar">
+      <div class="cb-label">OPERATOR INPUT</div>
+      <div class="cb-inner">
+        <div class="cb-input-wrap">
+          <input id="cmd-input" type="text"
+            placeholder="Describe a movement or task for ARIS..."
+            autocomplete="off" spellcheck="false" />
+        </div>
+        <button id="send-btn">EXECUTE</button>
+      </div>
+    </div>
+
+    <div class="response-area" id="response-area">
+      <div class="empty-state" id="empty-state">
+        <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+          <rect x="22" y="50" width="20" height="6" stroke="#4a6270" stroke-width="1.5"/>
+          <rect x="28" y="44" width="8" height="8" stroke="#4a6270" stroke-width="1.5"/>
+          <line x1="32" y1="44" x2="24" y2="28" stroke="#4a6270" stroke-width="2" stroke-linecap="round"/>
+          <line x1="24" y1="28" x2="34" y2="16" stroke="#4a6270" stroke-width="2" stroke-linecap="round"/>
+          <line x1="34" y1="16" x2="44" y2="8"  stroke="#4a6270" stroke-width="1.5" stroke-linecap="round"/>
+          <circle cx="32" cy="44" r="3" stroke="#4a6270" stroke-width="1.5"/>
+          <circle cx="24" cy="28" r="3" stroke="#4a6270" stroke-width="1.5"/>
+          <circle cx="34" cy="16" r="2" stroke="#4a6270" stroke-width="1.5"/>
+        </svg>
+        <p>AWAITING COMMAND</p>
+      </div>
+    </div>
+  </main>
+
+  <!-- RIGHT PANEL -->
+  <div class="panel">
+
+    <!-- Audio -->
+    <div class="panel-section" id="sec-audio" style="flex-shrink:0">
+      <div class="panel-header" onclick="toggleSection('sec-audio')">
+        VOICE OUTPUT <span class="collapse-arrow">▼</span>
+      </div>
+      <div class="panel-body">
+        <div class="audio-wrap">
+          <div class="audio-status" id="audio-status">NO AUDIO YET</div>
+          <audio id="audio-player" controls style="display:none"></audio>
+          <div class="audio-text" id="audio-text" style="display:none"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Metrics -->
+    <div class="panel-section" id="sec-metrics" style="flex-shrink:0">
+      <div class="panel-header" onclick="toggleSection('sec-metrics')">
+        METRICS <span class="collapse-arrow">▼</span>
+      </div>
+      <div class="panel-body">
+        <div class="metrics-grid">
+          <div class="metric"><span class="m-val" id="m-latency">—</span><span class="m-lbl">LATENCY (s)</span></div>
+          <div class="metric"><span class="m-val" id="m-steps">—</span><span class="m-lbl">CMD STEPS</span></div>
+          <div class="metric"><span class="m-val" id="m-total">0</span><span class="m-lbl">TOTAL RUNS</span></div>
+          <div class="metric"><span class="m-val" id="m-avg">—</span><span class="m-lbl">AVG LATENCY</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- JSON -->
+    <div class="panel-section" id="sec-json" style="flex: 1; min-height: 0;">
+      <div class="panel-header" onclick="toggleSection('sec-json')">
+        MISSION JSON <span class="collapse-arrow">▼</span>
+      </div>
+      <div class="panel-body" style="flex:1; overflow:auto;">
+        <pre class="json-view" id="json-view">// No mission loaded</pre>
+      </div>
+    </div>
+
+    <!-- Downloads -->
+    <div class="panel-section" id="sec-dl" style="flex-shrink:0">
+      <div class="panel-header" onclick="toggleSection('sec-dl')">
+        DOWNLOADS <span class="collapse-arrow">▼</span>
+      </div>
+      <div class="panel-body">
+        <div class="dl-links">
+          <a class="dl-link disabled" id="dl-json" href="#" target="_blank">
+            <span class="dl-icon">⬡</span> MISSION.JSON
+          </a>
+          <a class="dl-link disabled" id="dl-wav" href="#" target="_blank">
+            <span class="dl-icon">◉</span> VOICE.WAV
+          </a>
+          <a class="dl-link disabled" id="dl-log" href="#" target="_blank">
+            <span class="dl-icon">≡</span> MISSION.LOG
+          </a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ── QUICK PROMPTS ──────────────────────────────────────────────
+const QUICK_PROMPTS = [
+  "Return to home position",
+  "Reach forward 200mm and grab",
+  "Rotate wrist 90 degrees clockwise",
+  "Pick up object on the left side",
+  "Move up 150mm then open gripper",
+  "Do a full 360 wrist rotation",
+  "Stack: move right, drop, come back",
+  "Reach out, grab, lift 100mm, hold",
+  "Go home, wait 2 seconds, grab air",
+  "Wave — move side to side smoothly",
+];
+
+const qpContainer = document.getElementById('quick-prompts');
+QUICK_PROMPTS.forEach(text => {
+  const btn = document.createElement('button');
+  btn.className = 'qp-chip';
+  btn.textContent = text;
+  btn.onclick = () => {
+    const input = document.getElementById('cmd-input');
+    const current = input.value.trimEnd();
+    input.value = current ? current + ', ' + text : text;
+    input.focus();
+    input.setSelectionRange(input.value.length, input.value.length);
+  };
+  qpContainer.appendChild(btn);
+});
+
+// ── STATE ──────────────────────────────────────────────────────
+let totalRuns = 0;
+let totalLatency = 0;
+const history = [];
+
+// ── STATUS CHECK ───────────────────────────────────────────────
+async function checkStatus() {
+  try {
+    const r = await fetch('/api/status');
+    const d = await r.json();
+    const dot = document.getElementById('status-dot');
+    const lbl = document.getElementById('status-label');
+    if (d.status === 'online') {
+      dot.className = 'status-dot online';
+      lbl.textContent = 'ONLINE';
+    } else {
+      dot.className = 'status-dot offline';
+      lbl.textContent = 'OFFLINE';
+    }
+  } catch {
+    document.getElementById('status-dot').className = 'status-dot offline';
+    document.getElementById('status-label').textContent = 'NO CONN';
+  }
+}
+checkStatus();
+setInterval(checkStatus, 10000);
+
+// ── SEND COMMAND ───────────────────────────────────────────────
+async function sendCommand() {
+  const input = document.getElementById('cmd-input');
+  const btn   = document.getElementById('send-btn');
+  const cmd   = input.value.trim();
+  if (!cmd) return;
+
+  // Clear empty state
+  document.getElementById('empty-state')?.remove();
+
+  btn.disabled = true;
+  btn.textContent = 'PROCESSING...';
+  input.disabled = true;
+
+  const area = document.getElementById('response-area');
+
+  // Show loading
+  const loadingEl = document.createElement('div');
+  loadingEl.className = 'loading-block';
+  loadingEl.id = 'loading-block';
+  loadingEl.innerHTML = `<div class="spinner"></div><span>ARIS IS THINKING — COMPUTING TRAJECTORY...</span>`;
+  area.appendChild(loadingEl);
+  area.scrollTop = area.scrollHeight;
+
+  try {
+    const res = await fetch('/api/command', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ command: cmd }),
+    });
+    const data = await res.json();
+    loadingEl.remove();
+
+    if (!res.ok) throw new Error(data.error || 'Unknown error');
+
+    renderResponse(data);
+    updateMetrics(data);
+    updatePanel(data);
+    addHistory(cmd, data.timestamp);
+
+    input.value = '';
+  } catch (err) {
+    loadingEl.remove();
+    renderError(err.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'EXECUTE';
+    input.disabled = false;
+    input.focus();
+  }
+}
+
+// ── RENDER RESPONSE ────────────────────────────────────────────
+function renderResponse(data) {
+  const area = document.getElementById('response-area');
+
+  // Thought chain
+  if (data.thoughtChain) {
+    const tb = document.createElement('div');
+    tb.className = 'think-block';
+    tb.innerHTML = `<div class="think-label">ENGINEER THOUGHTS</div>${escHtml(data.thoughtChain)}`;
+    area.appendChild(tb);
+  }
+
+  // ARIS speech
+  const speech = document.createElement('div');
+  speech.className = 'aris-speech';
+  speech.innerHTML = `
+    <div class="aris-avatar">ARIS</div>
+    <div class="speech-content">
+      <div class="speech-time">${formatTime(data.timestamp)} — ${data.latency}s</div>
+      ${escHtml(data.voiceResponse)}
+    </div>`;
+  area.appendChild(speech);
+
+  // Sequence
+  if (data.sequence?.length) {
+    const sb = document.createElement('div');
+    sb.className = 'sequence-block';
+    const steps = data.sequence.map((s, i) => `
+      <div class="seq-step">
+        <div class="seq-num">${String(i+1).padStart(2,'0')}</div>
+        <div class="seq-cmd cmd-${s.cmd}">${s.cmd}</div>
+        <div class="seq-val">${formatVal(s.val)}</div>
+      </div>`).join('');
+    sb.innerHTML = `<div class="seq-label">COMMAND SEQUENCE — ${data.sequence.length} STEPS</div>
+                    <div class="seq-steps">${steps}</div>`;
+    area.appendChild(sb);
+  }
+
+  area.scrollTop = area.scrollHeight;
+}
+
+function renderError(msg) {
+  const area = document.getElementById('response-area');
+  const el = document.createElement('div');
+  el.className = 'think-block';
+  el.style.borderColor = 'var(--red)';
+  el.innerHTML = `<div class="think-label" style="color:var(--red)">ERROR</div>${escHtml(msg)}`;
+  area.appendChild(el);
+  area.scrollTop = area.scrollHeight;
+}
+
+// ── UPDATE PANEL ───────────────────────────────────────────────
+function updatePanel(data) {
+  // Audio
+  const player = document.getElementById('audio-player');
+  const status = document.getElementById('audio-status');
+  const audioText = document.getElementById('audio-text');
+  if (data.audioReady && data.files?.wav) {
+    player.src = `/api/audio/${data.files.wav}`;
+    player.style.display = 'block';
+    player.load();
+    status.style.display = 'none';
+    audioText.textContent = `"${data.voiceResponse}"`;
+    audioText.style.display = 'block';
+  }
+
+  // JSON view
+  document.getElementById('json-view').innerHTML =
+    syntaxHighlight(JSON.stringify({ mission_sequence: data.sequence }, null, 2));
+
+  // Downloads
+  if (data.files) {
+    setDL('dl-json', `/api/json/${data.files.json}`);
+    setDL('dl-wav',  `/api/audio/${data.files.wav}`);
+    setDL('dl-log',  `/api/log/${data.files.log}`);
+  }
+}
+
+function setDL(id, href) {
+  const el = document.getElementById(id);
+  el.href = href;
+  el.classList.remove('disabled');
+}
+
+// ── METRICS ───────────────────────────────────────────────────
+function updateMetrics(data) {
+  totalRuns++;
+  totalLatency += data.latency;
+  document.getElementById('m-latency').textContent = data.latency;
+  document.getElementById('m-steps').textContent   = data.sequence?.length ?? 0;
+  document.getElementById('m-total').textContent   = totalRuns;
+  document.getElementById('m-avg').textContent     = (totalLatency / totalRuns).toFixed(2);
+}
+
+// ── HISTORY ───────────────────────────────────────────────────
+function addHistory(cmd, ts) {
+  history.unshift({ cmd, ts });
+  const list = document.getElementById('history-list');
+  document.getElementById('history-empty')?.remove();
+
+  const item = document.createElement('div');
+  item.className = 'history-item';
+  item.innerHTML = `<div class="hi-time">${formatTime(ts)}</div>
+                    <div class="hi-text">${escHtml(cmd)}</div>`;
+  item.onclick = () => {
+    document.getElementById('cmd-input').value = cmd;
+    document.getElementById('cmd-input').focus();
+  };
+  list.insertBefore(item, list.firstChild);
+}
+
+// ── COLLAPSIBLE SECTIONS ──────────────────────────────────────
+function toggleSection(id) {
+  document.getElementById(id).classList.toggle('collapsed');
+}
+
+// ── KEYBOARD SHORTCUT ─────────────────────────────────────────
+document.getElementById('cmd-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') sendCommand();
+});
+document.getElementById('send-btn').addEventListener('click', sendCommand);
+
+// ── UTILS ─────────────────────────────────────────────────────
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function formatTime(iso) {
+  try { return new Date(iso).toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit',second:'2-digit'}); }
+  catch { return ''; }
+}
+
+function formatVal(val) {
+  if (val === null || val === undefined) return '';
+  if (typeof val === 'boolean') return val ? 'CLOSE' : 'OPEN';
+  if (Array.isArray(val)) return `[${val.join(', ')}]`;
+  return String(val);
+}
+
+function syntaxHighlight(json) {
+  return json
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, match => {
+      let cls = 'json-num';
+      if (/^"/.test(match)) cls = /:$/.test(match) ? 'json-key' : 'json-str';
+      else if (/true|false/.test(match)) cls = 'json-bool';
+      return `<span class="${cls}">${match}</span>`;
+    });
+}
+</script>
+</body>
+</html>
