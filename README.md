@@ -14,7 +14,7 @@ Say *"reach forward and grab the block"* and ARIS will:
 2. **Act** — The arm executes the movement over serial/USB.
 3. **Respond** — ARIS speaks a natural confirmation using the Kokoro TTS engine.
 
-No cloud. No API keys. Everything runs on-device.
+No cloud. No API keys. Everything runs on-device. Within 10 seconds (for normal tasks).
 
 ---
 
@@ -43,8 +43,7 @@ ARIS/
 | Degrees of Freedom | 3-DOF movement + end-effector |
 | Axes | X (Forward/Back) · Y (Left/Right) · Z (Up/Down) |
 | End Effector | Swappable (gripper / tool mount) |
-| Controller | *(e.g. Arduino Mega, ESP32)* |
-| Communication | *(e.g. USB Serial @ 115200 baud)* |
+| Controller | *Raspberry Pi Pico 2* |
 
 > ARIS was originally designed as a 6-DOF arm. The current hardware uses 3-DOF Cartesian movement with a modular end-effector. Wrist rotation (`ROTATE_WRIST`) is reserved for a future revision.
 
