@@ -1,4 +1,4 @@
-# ARIS — Adaptive Robotic Intelligence System
+# ARIS — Autonomous Robotic Intelligence System
 
 > **High School Electronics Capstone Project**  
 > A 3-DOF robotic arm with a swappable end-effector, controlled via natural language using a local LLM and Kokoro TTS for voice feedback.
@@ -138,7 +138,3 @@ The same model runs twice with different system prompts — once as a precise mo
 - [Kokoro TTS](https://github.com/hexgrad/kokoro) — Open-source text-to-speech  
 - [Flask](https://flask.palletsprojects.com/) — Web server  
 - NumPy + soundfile — Audio processing  
-
----
-
-*ARIS — High school electronics capstone project.*
