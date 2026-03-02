@@ -1,0 +1,16 @@
+{
+    "mission_sequence": [
+        {
+            "cmd": "MOVE_XYZ",
+            "val": [
+                100,
+                0,
+                0
+            ]
+        },
+        {
+            "cmd": "GRAB",
+            "val": true
+        }
+    ]
+}

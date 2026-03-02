@@ -1,0 +1,44 @@
+{
+    "mission_sequence": [
+        {
+            "cmd": "MOVE_XYZ",
+            "val": [
+                100,
+                0,
+                100
+            ]
+        },
+        {
+            "cmd": "ROTATE_WRIST",
+            "val": [
+                0,
+                30,
+                0
+            ]
+        },
+        {
+            "cmd": "WAIT",
+            "val": 2
+        },
+        {
+            "cmd": "MOVE_XYZ",
+            "val": [
+                100,
+                0,
+                0
+            ]
+        },
+        {
+            "cmd": "ROTATE_WRIST",
+            "val": [
+                0,
+                -30,
+                0
+            ]
+        },
+        {
+            "cmd": "WAIT",
+            "val": 2
+        }
+    ]
+}

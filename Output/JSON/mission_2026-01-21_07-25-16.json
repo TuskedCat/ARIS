@@ -1,0 +1,32 @@
+{
+    "mission_sequence": [
+        {
+            "cmd": "LIGHT_CONTROL",
+            "val": 1
+        },
+        {
+            "cmd": "MOVE_FORWARD",
+            "val": 1
+        },
+        {
+            "cmd": "GRAB",
+            "val": 1
+        },
+        {
+            "cmd": "TURN_CW",
+            "val": 1
+        },
+        {
+            "cmd": "MOVE_BACKWARD",
+            "val": 1
+        },
+        {
+            "cmd": "LIGHT_CONTROL",
+            "val": 1
+        },
+        {
+            "cmd": "GRAB",
+            "val": 0
+        }
+    ]
+}

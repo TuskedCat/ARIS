@@ -1,0 +1,9 @@
+--- ARIS MISSION LOG ---
+Timestamp : 2026-02-26 10:17:30.253467
+Input     : "Return to home position, then, Do a full 360 wrist rotation, and, Wave — move side to side smoothly"
+
+--- ENGINEER THOUGHTS ---
+First, we need to return to the home position. Then, we will perform a full 360-degree wrist rotation. Finally, we will wave the arm side to side smoothly.
+
+--- ARIS VOICE ---
+"Returning home now! I'll make sure to make a nice, smooth wave when I'm there."

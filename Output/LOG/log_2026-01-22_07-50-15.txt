@@ -1,0 +1,9 @@
+--- ARIS MISSION LOG ---
+Timestamp: 2026-01-22 07:50:15.526073
+Input: "wave for me"
+
+--- ENGINEER THOUGHTS (IK PLANNER) ---
+To wave, the robotic arm needs to move the end-effector in a specific pattern. A typical wave can be achieved by moving the arm forward, then up, and finally back to the original position. Assuming 1 unit = 100mm, let's assume the arm moves 300mm forward, 200mm up, and then 300mm back.
+
+--- ARIS VOICE ---
+"Got it! Extending my arm out a bit first, then bringing it back in a fun wave! Here we go—Reaching out to grab it now. Waving at you! Returning to home position!"

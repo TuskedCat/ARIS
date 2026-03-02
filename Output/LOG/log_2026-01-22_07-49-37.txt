@@ -1,0 +1,9 @@
+--- ARIS MISSION LOG ---
+Timestamp: 2026-01-22 07:49:37.870948
+Input: "party time"
+
+--- ENGINEER THOUGHTS (IK PLANNER) ---
+For 'party time', we can interpret this as the robot needing to move to a position that is festive and engaging. A common gesture for a party could be raising the arm and waving. Let's assume the arm moves forward 1 unit, up 1 unit, and rotates the wrist to wave.
+
+--- ARIS VOICE ---
+"Got it! Reaching out to grab the party favors now. Let's make this celebration extra special!"
