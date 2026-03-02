@@ -1,0 +1,24 @@
+# Output files (auto-generated at runtime)
+Output/
+
+# Model files (too large for GitHub)
+*.gguf
+models/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+env/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
