@@ -126,8 +126,8 @@ The same model runs twice with different system prompts — once as a precise mo
 - [x] Flask web dashboard  
 - [x] CLI terminal interface  
 - [x] Mission logging (JSON / WAV / LOG)  
-- [ ] Serial communication to arm hardware  
-- [ ] Live position telemetry / feedback  
+- [x] Serial communication to arm hardware  
+- [x] Live position telemetry / feedback  
 - [ ] ROTATE_WRIST hardware implementation  
 
 ---
